@@ -1,0 +1,12 @@
+ssh arthurlima@69.195.152.146 -p 4422
+ssh -fNT -L 8050:localhost:8050 arthurlima@69.195.152.146 -p 4422
+scp -P 4422 arthurlima@69.195.152.146:/home/arthurlima/Cloud_TP2/* .
+ssh -fNT -L 5002:localhost:5002 arthurlima@69.195.152.146 -p 4422
+
+# Task1
+kubectl create configmap pyfile --from-file pyfile=task1_handler.py --output yaml
+kubectl create configmap outputkey --from-literal REDIS_OUTPUT_KEY=arthurlima-proj3-output --output yaml
+kubectl apply -f deployment.yaml
+kubectl delete configmap pyfile
+
+kubectl get deployments
