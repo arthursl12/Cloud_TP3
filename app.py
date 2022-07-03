@@ -1,7 +1,7 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-# import redis
+import redis
 
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output
@@ -12,7 +12,7 @@ import pandas as pd
 from random import randrange
 
 app = Dash(__name__)
-# r = redis.Redis(host='192.168.121.189', port=6379, db=0, decode_responses=True)
+r = redis.Redis(host='192.168.121.189', port=6379, db=0, decode_responses=True)
 
 ts = {}
 avgs = {}
@@ -106,18 +106,18 @@ def update_metrics(n):
     # print("Update called")
     
     # call redis, get a json
-    # redis_json = r.get('arthurlima-proj3-output')
-    redis_json = {
-        "avg-util-cpu1-60sec": randrange(0,15),
-        "avg-util-cpu2-60sec": randrange(0,15),
-        "avg-util-cpu3-60sec": randrange(0,15),
-        "avg-util-cpu4-60sec": randrange(0,15),
-        "avg-util-cpu1-1h": randrange(0,15),
-        "avg-util-cpu2-1h": randrange(0,15),
-        "avg-util-cpu3-1h": randrange(0,15),
-        "avg-util-cpu4-1h": randrange(0,15),
-        "other-metric": randrange(15,20)
-    }
+    redis_json = r.get('arthurlima-proj3-output')
+    # redis_json = {
+    #     "avg-util-cpu1-60sec": randrange(0,15),
+    #     "avg-util-cpu2-60sec": randrange(0,15),
+    #     "avg-util-cpu3-60sec": randrange(0,15),
+    #     "avg-util-cpu4-60sec": randrange(0,15),
+    #     "avg-util-cpu1-1h": randrange(0,15),
+    #     "avg-util-cpu2-1h": randrange(0,15),
+    #     "avg-util-cpu3-1h": randrange(0,15),
+    #     "avg-util-cpu4-1h": randrange(0,15),
+    #     "other-metric": randrange(15,20)
+    # }
     n_cpus = find_max_cpu_n(redis_json)
     allocate_dict(n_cpus)
     
