@@ -3,29 +3,13 @@ handler(input: dict, context: object) -> dict[str, Any]
 
 """
 
-mydict = {
-    "cpu_percent-1": 10,
-    "cpu_percent-2": 15,
-    "cpu_percent-3": 18,
-    "n_pids": 4
-}
-
-context_dict = {
-    "env": {
-        "60-cpu_percent-1": 10,
-        "1-cpu_percent-1": 10,
-        "60-cpu_percent-2": 10,
-        "1-cpu_percent-2": 10,
-        "60-cpu_percent-1": 10,
-        "1-cpu_percent-1": 10,
-        "60-n-pids": 15
-    }
-}
-
 def handler(input, context):
-    #print(context)
-    #print(dir(context))
-    #print(input)
+    def mean(lst):
+        total = 0
+        for x in lst:
+            total += x
+        return total / len(lst)
+    
     output = {}
     if ("n_cpus" not in context.env):
         # First run, must populate 'env' dictionary
@@ -33,15 +17,33 @@ def handler(input, context):
         # Find all cpu_percent-X, i.e. find how many CPUs are there
         keys = input.keys()
         result = [i for i in keys if i.startswith("cpu_percent")]
-        context.env["n_cpus"] = len(result)
-
+        n_cpus = len(result)
+        context.env["n_cpus"] = n_cpus
+    
         # Store current averages in 'env' for later
-        context.env["60-cpu_percent-1"] = input["cpu_percent-1"]
-
-        # TODO: moving average
-        output["avg-util-cpu1-60sec"] = input["cpu_percent-1"]
+        for i in range(n_cpus):
+            n = i+1
+            context.env[f"60-cpu_percent-{n}"] = [input[f"cpu_percent-{n}"]]
+            context.env[f"1h-cpu_percent-{n}"] = [input[f"cpu_percent-{n}"]]
     else:
-        output["avg-util-cpu1-60sec"] = input["cpu_percent-1"]
+        # Just add the current readings
+        n_cpus = context.env["n_cpus"]
+        for i in range(n_cpus):
+            n = i+1
+            # Append the new reading
+            context.env[f"60-cpu_percent-{n}"].append(input[f"cpu_percent-{n}"])
+            context.env[f"1h-cpu_percent-{n}"].append(input[f"cpu_percent-{n}"])
+            
+            # Remove the first one, i.e., 
+            # taking only the necessary for current rolling average
+            context.env[f"60-cpu_percent-{n}"][-60//5:]
+            context.env[f"1h-cpu_percent-{n}"][-3600//5:]
+            
+    # Compute moving average
+    for i in range(n_cpus):
+        n = i+1
+        output[f"avg-util-cpu{n}-60sec"] = mean(context.env[f"60-cpu_percent-{n}"])
+        output[f"avg-util-cpu{n}-1h"] = mean(context.env[f"1h-cpu_percent-{n}"])
     return output
 
 

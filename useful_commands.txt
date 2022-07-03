@@ -1,7 +1,7 @@
 ssh arthurlima@69.195.152.146 -p 4422
 ssh -fNT -L 8050:localhost:8050 arthurlima@69.195.152.146 -p 4422
 scp -P 4422 arthurlima@69.195.152.146:/home/arthurlima/Cloud_TP2/* .
-ssh -fNT -L 5002:localhost:5002 arthurlima@69.195.152.146 -p 4422
+ssh -fNT -L 5102:localhost:5102 arthurlima@69.195.152.146 -p 4422
 
 # Task1
 kubectl create configmap pyfile --from-file pyfile=usermodule.py --output yaml

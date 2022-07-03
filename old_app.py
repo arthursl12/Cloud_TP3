@@ -2,7 +2,6 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import redis
-import json
 
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output
@@ -69,32 +68,32 @@ def find_max_cpu_n(json_dict):
 def allocate_dict(n_cpus):
     keys = ts.keys()
     for i in range(n_cpus):
-        n = i
+        n = i+1
         if (f"avg-util-cpu{n}-60sec" not in keys):
             ts[f"avg-util-cpu{n}-60sec"] = []
         if (f"avg-util-cpu{n}-1h" not in keys):
             ts[f"avg-util-cpu{n}-1h"] = []
-    if ("avg-util-memory-60sec" not in keys):
-        ts["avg-util-memory-60sec"] = []
-
+    if ("other-metric" not in keys):
+        ts["other-metric"] = []
+    
     keys = avgs.keys()
     for i in range(n_cpus):
-        n = i
+        n = i+1
         if (f"avg-util-cpu{n}-60sec" not in keys):
             avgs[f"avg-util-cpu{n}-60sec"] = []
         if (f"avg-util-cpu{n}-1h" not in keys):
             avgs[f"avg-util-cpu{n}-1h"] = []
-    if ("avg-util-memory-60sec" not in keys):
-        avgs["avg-util-memory-60sec"] = []
+    if ("other-metric" not in keys):
+        avgs["other-metric"] = []
 
 def generate_titles(n_cpus, hour=False):
     titles = []
     for i in range(n_cpus):
-        if (hour): titl = f"Average CPU {i} usage - last hour"
-        else: titl = f"Average CPU {i} usage - last minute"
+        if (hour): titl = f"Average CPU {i+1} usage - last hour"
+        else: titl = f"Average CPU {i+1} usage - last minute"
         titles.append(titl)
     return titles
-
+    
 
 @app.callback(
     [
@@ -104,12 +103,10 @@ def generate_titles(n_cpus, hour=False):
     ],
     Input('interval-component', 'n_intervals'))
 def update_metrics(n):
-    print("Update called")
-
+    # print("Update called")
+    
     # call redis, get a json
     redis_json = r.get('arthurlima-proj3-output')
-    redis_json = json.loads(redis_json)
-    #print(redis_json)
     # redis_json = {
     #     "avg-util-cpu1-60sec": randrange(0,15),
     #     "avg-util-cpu2-60sec": randrange(0,15),
@@ -123,13 +120,13 @@ def update_metrics(n):
     # }
     n_cpus = find_max_cpu_n(redis_json)
     allocate_dict(n_cpus)
-
-
+    
+    
     # print(ts)
     # app.last_time += STEP
     # app.ts.append(app.last_time)
     # app.avgs.append(randrange(0,15))
-
+    
     app.last_time += STEP
     # Add averages to interal variables, generate 60s graph
     fig1 = psub.make_subplots(rows=n_cpus, cols=1,
@@ -139,18 +136,18 @@ def update_metrics(n):
     }
     fig1.update_layout(height=150*n_cpus, width=900)
     fig1.update_xaxes(visible=False, showticklabels=False)
-
+    
     for i in range(n_cpus):
-        n = i
+        n = i+1
         key = f"avg-util-cpu{n}-60sec"
         ts[key].append(app.last_time)
         avgs[key].append(redis_json[key])
         ts[key] = ts[key][-PRINT_LAST:]
         avgs[key] = avgs[key][-PRINT_LAST:]
-        fig1.add_trace(Scatter(x=ts[key], y=avgs[key], name=f"CPU {i}"),
-                       row=n+1, col=1)
+        fig1.add_trace(Scatter(x=ts[key], y=avgs[key], name=f"CPU {i+1}"), 
+                       row=n, col=1)
         fig1['layout'][f'yaxis{i+1}']['title']='%'
-
+    
     # Add averages to interal variables, generate 1h graph
     fig2 = psub.make_subplots(rows=n_cpus, cols=1, shared_yaxes=True)
     fig2['layout']['margin'] = {
@@ -158,21 +155,21 @@ def update_metrics(n):
     }
     fig2.update_xaxes(visible=False, showticklabels=False)
     fig2.update_layout(height=150*n_cpus, width=900, yaxis_title="%")
-
+    
     for i in range(n_cpus):
-        n = i
+        n = i+1
         key = f"avg-util-cpu{n}-1h"
         ts[key].append(app.last_time)
         avgs[key].append(redis_json[key])
         ts[key] = ts[key][-PRINT_LAST:]
         avgs[key] = avgs[key][-PRINT_LAST:]
-        fig2.add_trace(Scatter(x=ts[key], y=avgs[key],
-                               name=f"CPU {i}"),
-                       row=n+1, col=1)
+        fig2.add_trace(Scatter(x=ts[key], y=avgs[key], 
+                               name=f"CPU {i+1}"), 
+                       row=n, col=1)
         fig2['layout'][f'yaxis{i+1}']['title']='%'
-    print(avgs)
+    
     # Generate other metric graph
-    key = "avg-util-memory-60sec"
+    key = "other-metric"
     ts[key].append(app.last_time)
     avgs[key].append(redis_json[key])
     ts[key] = ts[key][-PRINT_LAST:]
@@ -186,4 +183,6 @@ if __name__ == '__main__':
     app.last_time = 0
     # app.ts = [0]
     # app.avgs = [0]
-    app.run_server(debug=True, port=5102)
+    app.run_server(debug=True)
+    
+    print(out)
