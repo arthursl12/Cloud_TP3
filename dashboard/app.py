@@ -170,7 +170,7 @@ def update_metrics(n):
                                name=f"CPU {i}"),
                        row=n+1, col=1)
         fig2['layout'][f'yaxis{i+1}']['title']='%'
-    print(avgs)
+    #print(avgs)
     # Generate other metric graph
     key = "avg-util-memory-60sec"
     ts[key].append(app.last_time)
@@ -186,4 +186,4 @@ if __name__ == '__main__':
     app.last_time = 0
     # app.ts = [0]
     # app.avgs = [0]
-    app.run_server(debug=True, port=5102)
+    app.run_server(host='0.0.0.0',debug=True, port=5102)
