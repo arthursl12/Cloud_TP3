@@ -33,12 +33,12 @@ def handler(input, context):
 
             # Remove the first one, i.e.,
             # taking only the necessary for current rolling average
-            context.env[f"60-cpu_percent-{i}"][-60//5:]
-            context.env[f"1h-cpu_percent-{i}"][-3600//5:]
+            context.env[f"60-cpu_percent-{i}"] = context.env[f"60-cpu_percent-{i}"][-60//5:]
+            context.env[f"1h-cpu_percent-{i}"] = context.env[f"1h-cpu_percent-{i}"][-3600//5:]
         
         # Add readings for memory used
         context.env[f"60-virtual_memory-percent"].append(input[f"virtual_memory-percent"])
-        context.env[f"60-virtual_memory-percent"][-60//5:]
+        context.env[f"60-virtual_memory-percent"] = context.env[f"60-virtual_memory-percent"][-60//5:]
 
     # Compute moving average
     for i in range(n_cpus):
