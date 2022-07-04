@@ -17,3 +17,6 @@ kubectl exec --stdin --tty serverless-redis-7fc5785d5f-b4zv5 -- /bin/bash
 docker exec -it de096bc9df39 /bin/bash
 docker build . -t arthursl12/arthur-dashboard:0.4
 docker run --publish 5102:5102 arthursl12/arthur-dashboard:0.4
+
+# Note: tem que deixar esse aberto
+kubectl port-forward service/arthur-dashboard-service 5102:5102
