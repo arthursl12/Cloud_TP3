@@ -19,21 +19,21 @@ STEP = 5
 class Context:
     """
     Context object used by handler function
-    
+
     Attributes:
     host: Hostname of the server running Redis.
     port: Port where the Redis server is listening.
     input_key: Input key used to read monitoring data from Redis.
     output_key: Output key used to store metrics on Redis.
-    function_getmtime: Timestamp of the last update to your module's Python 
+    function_getmtime: Timestamp of the last update to your module's Python
                        file.
-    last_execution: Timestamp of last execution of your serverless function and 
+    last_execution: Timestamp of last execution of your serverless function and
                     result storage on Redis.
-    env: A JSON-encodable dictionary that persists between calls to the your 
+    env: A JSON-encodable dictionary that persists between calls to the your
          serverless function. This variable can be used to persist small amounts
          of user data (context environment) between executions
     """
-    
+
     def __init__(self):
         self.host = REDIS_HOST
         self.port = REDIS_PORT
@@ -41,11 +41,11 @@ class Context:
         self.output_ket = REDIS_OUTPUT_KEY
         self.last_execution = ""
         self.env = {}
-        
+
         # Getting last modified time
         tmstmp = os.path.getmtime("usermodule.py")
         self.function_getmtime = datetime.fromtimestamp(tmstmp)
-    
+
     def update_execution(self):
         self.last_execution = datetime.now()
 
@@ -54,13 +54,13 @@ def main():
     last_data = None
     data = None
     while(1):
-        # Read data from redis 
+        # Read data from redis
         r_dict = r.get(REDIS_INPUT_KEY)
         r_dict = json.loads(r_dict)
-        
+
         last_data = data
         data = r_dict
-        
+
         # Call handler to update the differences, if any
         if (last_data != data):
             output = usermodule.handler(data, ctx)
@@ -71,5 +71,3 @@ def main():
 # Write back on redis
 if __name__ == "__main__":
     main()
-
-
