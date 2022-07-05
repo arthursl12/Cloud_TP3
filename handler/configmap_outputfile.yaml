@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  REDIS_OUTPUT_KEY: arthurlima-proj3-output
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-07-05T12:36:03Z"
+  name: outputkey
+  namespace: arthurlima
+  resourceVersion: "4600277"
+  uid: b190aa78-9b25-41ae-811b-8bc0fb7eac5d
