@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: arthur-dashboard
-        image: arthursl12/arthur-dashboard:1.0
+        image: arthursl12/arthur-dashboard:1.1
         ports:
         - containerPort: 5102
         - containerPort: 5102
