@@ -1,6 +1,4 @@
-# Run this app with `python app.py` and
-# visit http://127.0.0.1:8050/ in your web browser.
-
+# Run this app with `python app.py`
 import redis
 import json
 
@@ -10,20 +8,21 @@ import plotly.subplots as psub
 from plotly.graph_objects import Scatter
 import plotly.express as px
 import pandas as pd
-from random import randrange
 
+# Initializing dashboard app and redis connection
 app = Dash(__name__)
 r = redis.Redis(host='192.168.121.189', port=6379, db=0, decode_responses=True)
 
+# Dictionaries to store the data
 ts = {}
 avgs = {}
 STEP = 2
 PRINT_LAST = 10
 
+# Creating the webpage and initial graphs 
 fig1 = psub.make_subplots(rows=2, cols=1, vertical_spacing=0.2)
 fig2 = psub.make_subplots(rows=2, cols=1, vertical_spacing=0.2)
 fig3 = psub.make_subplots(rows=1, cols=1, vertical_spacing=0.2)
-
 app.layout = html.Div(children=[
     html.H1(children='Dashboard'),
 
@@ -46,7 +45,7 @@ app.layout = html.Div(children=[
         figure=fig2
     ),
     html.H2(id="other-title", children='''
-        Other graph
+        Memory Used - Last minute average
     '''),
     dcc.Graph(
         id='other-graph',
@@ -59,7 +58,7 @@ app.layout = html.Div(children=[
     )
 ])
 
-
+# Auxiliary functions
 def find_max_cpu_n(json_dict):
     keys = json_dict.keys()
     result_list = [i for i in keys if i.startswith("avg-util-cpu")]
@@ -87,15 +86,7 @@ def allocate_dict(n_cpus):
     if ("avg-util-memory-60sec" not in keys):
         avgs["avg-util-memory-60sec"] = []
 
-def generate_titles(n_cpus, hour=False):
-    titles = []
-    for i in range(n_cpus):
-        if (hour): titl = f"Average CPU {i} usage - last hour"
-        else: titl = f"Average CPU {i} usage - last minute"
-        titles.append(titl)
-    return titles
-
-
+# Get data from redis and update the graphs
 @app.callback(
     [
         Output('60s-graph','figure'),
@@ -104,33 +95,16 @@ def generate_titles(n_cpus, hour=False):
     ],
     Input('interval-component', 'n_intervals'))
 def update_metrics(n):
-    print("Update called")
-
-    # call redis, get a json
+    # Get data from redis
+    # print("Update called")
     redis_json = r.get('arthurlima-proj3-output')
     redis_json = json.loads(redis_json)
-    #print(redis_json)
-    # redis_json = {
-    #     "avg-util-cpu1-60sec": randrange(0,15),
-    #     "avg-util-cpu2-60sec": randrange(0,15),
-    #     "avg-util-cpu3-60sec": randrange(0,15),
-    #     "avg-util-cpu4-60sec": randrange(0,15),
-    #     "avg-util-cpu1-1h": randrange(0,15),
-    #     "avg-util-cpu2-1h": randrange(0,15),
-    #     "avg-util-cpu3-1h": randrange(0,15),
-    #     "avg-util-cpu4-1h": randrange(0,15),
-    #     "other-metric": randrange(15,20)
-    # }
+
+    # Find how many CPUs and allocate dictionary if necessary
     n_cpus = find_max_cpu_n(redis_json)
     allocate_dict(n_cpus)
-
-
-    # print(ts)
-    # app.last_time += STEP
-    # app.ts.append(app.last_time)
-    # app.avgs.append(randrange(0,15))
-
     app.last_time += STEP
+    
     # Add averages to interal variables, generate 60s graph
     fig1 = psub.make_subplots(rows=n_cpus, cols=1,
                               shared_yaxes=True,y_title='%')
@@ -139,7 +113,6 @@ def update_metrics(n):
     }
     fig1.update_layout(height=150*n_cpus, width=900)
     fig1.update_xaxes(visible=False, showticklabels=False)
-
     for i in range(n_cpus):
         n = i
         key = f"avg-util-cpu{n}-60sec"
@@ -170,20 +143,19 @@ def update_metrics(n):
                                name=f"CPU {i}"),
                        row=n+1, col=1)
         fig2['layout'][f'yaxis{i+1}']['title']='%'
-    #print(avgs)
-    # Generate other metric graph
+
+    # Generate memory graph
     key = "avg-util-memory-60sec"
     ts[key].append(app.last_time)
     avgs[key].append(redis_json[key])
     ts[key] = ts[key][-PRINT_LAST:]
     avgs[key] = avgs[key][-PRINT_LAST:]
-    fig3 = px.line(x=ts[key], y=avgs[key])
+    fig3 = px.line(x=ts[key], y=avgs[key], labels=['Virtual Memory Used'])
     fig3.update_xaxes(visible=False, showticklabels=False)
+    fig3['layout']['yaxis']['title']='%'
     return fig1,fig2,fig3
 
 
 if __name__ == '__main__':
     app.last_time = 0
-    # app.ts = [0]
-    # app.avgs = [0]
     app.run_server(host='0.0.0.0',debug=True, port=5102)
